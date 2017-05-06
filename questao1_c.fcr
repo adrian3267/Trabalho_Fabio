@@ -1,0 +1,58 @@
+/* adapted from:
+ 0 = livre
+ 1 = obstaculo movel
+ 2 = obstaculo fixo
+ robo: x,y
+ celulas-alvo: elementos da matriz 'marked'
+*/
+
+/* Process */
+process play is
+    states move, done
+    var x : 0..6 := 1,
+        y : 0..6 := 1,
+	    max_step : nat := 2,
+		revisited : int:= 0,
+        a : array 7 of array 7 of nat := [[2,2,2,2,2,2,2],
+										  [2,0,0,0,2,2,2],
+                                          [2,0,1,1,0,0,2],
+                                          [2,1,0,0,1,2,2],
+                                          [2,0,0,2,0,0,2],
+                                          [2,3,0,0,0,0,2],
+										  [2,2,2,2,2,2,2]],
+		marked : array 3 of array 2 of nat := [[3,3], [4,1], [5,5]],
+		visited : array 7 of array 7 of nat := [[0,0,0,0,0,0,0],
+												[0,0,0,0,0,0,0],
+												[0,0,0,0,0,0,0],
+												[0,0,0,0,0,0,0],
+												[0,0,0,0,0,0,0],
+												[0,0,0,0,0,0,0],
+												[0,0,0,0,0,0,0]]
+												
+    from move  
+		select
+			/* check if done */				
+			on visited[3][3] > 0 and visited[4][1] > 0 and visited[5][5] > 0 and x = 1 and y = 1; to done
+			/* moves */
+			[] on a[y][x-1]=0 and visited[y][x-1] < max_step; x := x-1; visited[y][x] := visited[y][x] + 1; revisited := revisited + visited[y][x] - 1; to move
+			[] on a[y][x+1]=0 and visited[y][x+1] < max_step; x := x+1; visited[y][x] := visited[y][x] + 1; revisited := revisited + visited[y][x] - 1; to move
+			[] on a[y-1][x]=0 and visited[y-1][x] < max_step; y := y-1; visited[y][x] := visited[y][x] + 1; revisited := revisited + visited[y][x] - 1; to move
+			[] on a[y+1][x]=0 and visited[y+1][x] < max_step; y := y+1; visited[y][x] := visited[y][x] + 1; revisited := revisited + visited[y][x] - 1; to move
+			/* pushes */
+			[] on a[y][x-1]=1 and visited[y][x-1] < max_step and a[y][x-2]=0; a[y][x-2]:=1; a[y][x-1]:=0; x:=x-1; visited[y][x] := visited[y][x] + 1; revisited := revisited + visited[y][x] - 1; to move
+			[] on a[y][x+1]=1 and visited[y][x+1] < max_step and a[y][x+2]=0; a[y][x+2]:=1; a[y][x+1]:=0; x:=x+1; visited[y][x] := visited[y][x] + 1; revisited := revisited + visited[y][x] - 1; to move
+			[] on a[y-1][x]=1 and visited[y-1][x] < max_step and a[y-2][x]=0; a[y-2][x]:=1; a[y-1][x]:=0; y:=y-1; visited[y][x] := visited[y][x] + 1; revisited := revisited + visited[y][x] - 1; to move
+			[] on a[y+1][x]=1 and visited[y+1][x] < max_step and a[y+2][x]=0; a[y+2][x]:=1; a[y+1][x]:=0; y:=y+1; visited[y][x] := visited[y][x] + 1; revisited := revisited + visited[y][x] - 1; to move
+		end
+		
+/* Entry point */
+
+play
+
+
+/* Properties */
+
+property impossible is ltl ([] not (play/state done))
+assert impossible
+
+
